@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
         itemBuilder: (context, index) {
           final Task task = box.values.toList()[index];
           return Container(
-           
+
           );
       },),
     );
@@ -56,7 +56,12 @@ class EditTaskScreen extends StatelessWidget {
         final task = Task();
         task.name = _controller.text;
         task.priority = Priority.low;
-        task.save();
+        if(task.isInBox){
+          task.save();
+        }else{
+          final Box<Task> box = Hive.box(taskBoxName);
+          box.add(task);
+        }
         Navigator.of(context).pop();
       }, label: Text('Save Changes')),
       body: Column(
