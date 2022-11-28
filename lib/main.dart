@@ -6,7 +6,8 @@ const taskBoxName = 'tasks';
 void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(TaskAdapter());
-  Hive.openBox<Task>(taskBoxName);
+  Hive.registerAdapter(PriorityAdapter());
+  await Hive.openBox<Task>(taskBoxName);
   runApp(const MyApp());
 }
 
@@ -33,14 +34,23 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(onPressed: () {
        Navigator.of(context).push(MaterialPageRoute(builder: (context) => EditTaskScreen(),));
       }, label: Text('Add New Task')),
-      body: ListView.builder(
-        itemCount: box.values.length,
-        itemBuilder: (context, index) {
-          final Task task = box.values.toList()[index];
-          return Container(
+      body: ValueListenableBuilder<Box<Task>>(
+        valueListenable: box.listenable(),
+        builder: (context, box, child){
+          return ListView.builder(
+            itemCount: box.values.length,
+            itemBuilder: (context, index) {
+              final Task task = box.values.toList()[index];
+              return Container(
+                child: Text(
+                  task.name,
+                  style: TextStyle(fontSize: 24, fontWeight:FontWeight.bold ),
+                ),
+              );
+            },);
+        },
 
-          );
-      },),
+      ),
     );
   }
 }
