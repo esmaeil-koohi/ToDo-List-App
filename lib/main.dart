@@ -44,7 +44,7 @@ class HomeScreen extends StatelessWidget {
               return Container(
                 child: Text(
                   task.name,
-                  style: TextStyle(fontSize: 24, fontWeight:FontWeight.bold ),
+                  style: TextStyle(fontSize: 24),
                 ),
               );
             },);
@@ -57,14 +57,15 @@ class HomeScreen extends StatelessWidget {
 
 class EditTaskScreen extends StatelessWidget {
   EditTaskScreen({Key? key}) : super(key: key);
- TextEditingController _controller = TextEditingController();
+final TextEditingController _controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Edit Task'),),
-      floatingActionButton: FloatingActionButton.extended(onPressed: () {
+      floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
         final task = Task();
-        task.name = _controller.text;
+        task.name = _controller.text.toString();
         task.priority = Priority.low;
         if(task.isInBox){
           task.save();
@@ -77,6 +78,7 @@ class EditTaskScreen extends StatelessWidget {
       body: Column(
         children: [
           TextField(
+            controller: _controller,
             decoration: InputDecoration(
               label: Text('Add a task for today...')
             ),
