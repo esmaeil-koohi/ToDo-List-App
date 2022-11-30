@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:todo/data.dart';
 
+import 'edit.dart';
+
 const taskBoxName = 'tasks';
 
 void main() async {
@@ -19,7 +21,10 @@ void main() async {
 
 const Color primaryColor = Color(0xff794CFF);
 const Color primaryVariant = Color(0xff5C0AFF);
+const Color normalPriorityColor = Color(0xffF09819);
+const Color lowPriorityColor = Color(0xff3BE1F1);
 final secondaryTextColor = Color(0xffAFBED0);
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -44,7 +49,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.light(
               primary: primaryColor,
               primaryVariant: primaryVariant,
-              background: Color(0xffF3F5F8),
+              background:const  Color(0xffF3F5F8),
               onSurface: primaryTextColor,
               onBackground: primaryTextColor,
               secondary: primaryColor,
@@ -54,9 +59,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box<TaskEntity>(taskBoxName);
@@ -66,10 +76,16 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => EditTaskScreen(),
+              builder: (context) => EditTaskScreen(task: TaskEntity(),),
             ));
           },
-          label: Text('Add New Task')),
+          label: Row(
+            children: const [
+              Text('Add New Task'),
+             SizedBox(width: 5.0,),
+              Icon(CupertinoIcons.add_circled_solid,),
+            ],
+          )),
       body: SafeArea(
         child: Column(
           children: [
@@ -109,9 +125,9 @@ class HomeScreen extends StatelessWidget {
                                 onPressed: () {},
                                 textColor: secondaryTextColor,
                                 child: Row(
-                                  children: [
+                                  children:  [
                                     Text('Delete All'),
-                                    SizedBox(
+                                   SizedBox(
                                       width: 4.0,
                                     ),
                                     Icon(
@@ -125,8 +141,7 @@ class HomeScreen extends StatelessWidget {
                             ],
                           );
                         } else {
-                          final TaskEntity task =
-                              box.values.toList()[index - 1];
+                          final TaskEntity task = box.values.toList()[index - 1];
                           return taskItem(task, context);
                         }
                       },
@@ -199,33 +214,53 @@ class HomeScreen extends StatelessWidget {
           );
   }
 
-
-  
-
   Widget taskItem(TaskEntity task, BuildContext context) {
     ThemeData themeData = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.only(left: 16, right:16 ),
-      height: 80,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-        color: themeData.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 20,
-            color: Colors.black.withOpacity(0.2),
-          )
-        ]
-      ),
-      child: Row(
-        children: [
-          MyCheckBox(value: task.isCompleted),
-          const SizedBox(width: 16.0,),
-          Text(
-            task.name,
-            style: const TextStyle(fontSize: 24),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            task.isCompleted = !task.isCompleted;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.only(left: 16, right:16 ),
+          height: 84,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+            color: themeData.colorScheme.surface,
+
           ),
-        ],
+          child: Row(
+            children: [
+              MyCheckBox(value: task.isCompleted),
+              const SizedBox(width: 16.0,),
+              Expanded(
+                child: Text(
+                  overflow:TextOverflow.ellipsis,
+                  maxLines:1,
+                  task.name,
+                  style:  TextStyle(
+                      fontSize: 24,
+                      decoration: task.isCompleted?
+                      TextDecoration.lineThrough : null ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Container(
+                  width: 8,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(bottomRight: Radius.circular(10), topRight: Radius.circular(10)),
+                    color: lowPriorityColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -237,53 +272,18 @@ class MyCheckBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData themeData = Theme.of(context);
     return Container(
-      width: 24,
-      height: 24,
+      width: 18,
+      height: 18,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: !value ? Border.all(color: secondaryTextColor, width: 2) : null,
         color: value ? primaryColor : null
       ),
-      child: value ? const Icon(CupertinoIcons.check_mark) : null ,
+      child: value ?  Icon(CupertinoIcons.check_mark, color: themeData.colorScheme.onPrimary, size: 16,) : null ,
     );
   }
 }
 
 
-
-class EditTaskScreen extends StatelessWidget {
-  EditTaskScreen({Key? key}) : super(key: key);
-  final TextEditingController _controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Task'),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            final task = TaskEntity();
-            task.name = _controller.text.toString();
-            task.priority = Priority.low;
-            if (task.isInBox) {
-              task.save();
-            } else {
-              final Box<TaskEntity> box = Hive.box(taskBoxName);
-              box.add(task);
-            }
-            Navigator.of(context).pop();
-          },
-          label: Text('Save Changes')),
-      body: Column(
-        children: [
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(label: Text('Add a task for today...')),
-          ),
-        ],
-      ),
-    );
-  }
-}

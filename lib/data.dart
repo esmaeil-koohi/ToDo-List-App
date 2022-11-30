@@ -1,5 +1,4 @@
 import 'package:hive_flutter/adapters.dart';
-
 part 'data.g.dart';
 
 @HiveType(typeId: 0)
