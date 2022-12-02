@@ -18,5 +18,5 @@ enum Priority {
   @HiveField(1)
   normal,
   @HiveField(2)
-  high
+  high,
 }
